@@ -202,7 +202,7 @@ Options:
       --ids <IDS>        Filter records by Sonarr/Radarr ID (comma-separated)
       --offset <OFFSET>  Skip N records (ignored if ids are specified) [default: skip none] [default: 0]
       --limit <LIMIT>    Limit to N records (ignored if ids are specified) [default: unlimited]
-      --skip-processed   Skip previously processed items (uses local database to track processed subtitles)
+      --skip-processed   Skip previously processed items for the current action (uses local database to track processed subtitles per action)
   -l, --language <LANGUAGE>  Filter subtitles by language code (e.g., en, es, fr)
   -h, --help             Print help
 ```
@@ -230,7 +230,7 @@ Options:
       --ids <IDS>        Filter records by Sonarr/Radarr ID (comma-separated)
       --offset <OFFSET>  Skip N records (ignored if ids are specified) [default: skip none] [default: 0]
       --limit <LIMIT>    Limit to N records (ignored if ids are specified) [default: unlimited]
-      --skip-processed   Skip previously processed items (uses local database to track processed subtitles)
+      --skip-processed   Skip previously processed items for the current action (uses local database to track processed subtitles per action)
   -l, --language <LANGUAGE>  Filter subtitles by language code (e.g., en, es, fr)
   -h, --help             Print help
 ```
@@ -276,4 +276,18 @@ bb --config config.json movies --ids 123,456,789 --language en sync
 ```bash
 bb --config config.json movies --language fr --skip-processed remove-hearing-impaired
 ```
+
+### Run multiple actions independently using skip-processed
+
+`--skip-processed` tracks each action separately, so running a second action will not skip items already processed by a different action:
+
+```bash
+# First pass: OCR fixes — marks each subtitle as processed for "ocr-fixes"
+bb --config config.json movies --skip-processed ocr-fixes
+
+# Second pass: common fixes — does NOT skip items from the ocr-fixes pass
+bb --config config.json movies --skip-processed common-fixes
+```
+
+> **Note:** If you have an existing database created before this change, you will see a one-time migration warning on startup. Existing records are preserved but will not count towards skip-processed checks under the new per-action scheme. Re-run each action once to rebuild the per-action processed history.
 
